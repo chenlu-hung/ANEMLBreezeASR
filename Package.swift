@@ -1,0 +1,30 @@
+// swift-tools-version: 5.9
+import PackageDescription
+
+let package = Package(
+    name: "ANEMLBreezeASR",
+    platforms: [
+        .macOS(.v13)
+    ],
+    dependencies: [
+        .package(url: "https://github.com/argmaxinc/WhisperKit", from: "0.9.0"),
+        .package(url: "https://github.com/dagronf/SwiftSubtitles", from: "2.2.0"),
+        .package(url: "https://github.com/MacPaw/OpenAI.git", from: "0.3.0")
+    ],
+    targets: [
+        .executableTarget(
+            name: "ANEMLBreezeASR",
+            dependencies: [
+                .product(name: "WhisperKit", package: "WhisperKit"),
+                .product(name: "SwiftSubtitles", package: "SwiftSubtitles"),
+                .product(name: "OpenAI", package: "OpenAI")
+            ],
+            path: "Sources/ANEMLBreezeASR"
+        ),
+        .testTarget(
+            name: "ANEMLBreezeASRTests",
+            dependencies: ["ANEMLBreezeASR"],
+            path: "Tests/ANEMLBreezeASRTests"
+        )
+    ]
+)
