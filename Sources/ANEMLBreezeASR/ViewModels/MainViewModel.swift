@@ -77,12 +77,15 @@ class MainViewModel: ObservableObject {
 
             // Step 5: LLM Correction/Translation (optional)
             if !skipLLMCorrection && llmService.isConfigured {
-                state = .correctingWithLLM
+                state = .correctingWithLLM(progress: 0)
 
                 let srtContent = try String(contentsOf: initialSrtURL, encoding: .utf8)
                 let correctedContent = try await llmService.correctSubtitles(
                     srtContent: srtContent,
-                    languageSettings: languageSettings
+                    languageSettings: languageSettings,
+                    progressHandler: { [weak self] progress in
+                        self?.state = .correctingWithLLM(progress: progress)
+                    }
                 )
 
                 // Validate corrected SRT

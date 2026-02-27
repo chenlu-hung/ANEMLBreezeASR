@@ -99,9 +99,6 @@ struct GenerateView: View {
                             Text("\(Int(progress * 100))%")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                        } else if viewModel.state == .correctingWithLLM {
-                            ProgressView()
-                                .progressViewStyle(.linear)
                         }
 
                         // Segments Info

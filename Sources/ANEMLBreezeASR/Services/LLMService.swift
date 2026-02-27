@@ -46,7 +46,11 @@ class LLMService {
         self.currentSettings = settings
     }
 
-    func correctSubtitles(srtContent: String, languageSettings: LanguageSettings? = nil) async throws -> String {
+    func correctSubtitles(
+        srtContent: String,
+        languageSettings: LanguageSettings? = nil,
+        progressHandler: ((Double) -> Void)? = nil
+    ) async throws -> String {
         guard let client = openAI, let settings = currentSettings else {
             throw LLMError.notConfigured
         }
@@ -55,35 +59,84 @@ class LLMService {
             throw LLMError.invalidSettings
         }
 
-        do {
-            // Build system prompt with optional translation instruction
-            var systemPrompt = settings.systemPrompt
-            if let langSettings = languageSettings, langSettings.enableTranslation {
-                systemPrompt += "\n\n" + langSettings.translationPrompt
-            }
+        // Build system prompt with optional translation instruction
+        var systemPrompt = settings.systemPrompt
+        if let langSettings = languageSettings, langSettings.enableTranslation {
+            systemPrompt += "\n\n" + langSettings.translationPrompt
+        }
 
-            let query = ChatQuery(
-                messages: [
-                    .init(role: .system, content: systemPrompt)!,
-                    .init(role: .user, content: """
+        let chunks = splitSRTIntoChunks(srtContent)
+        var correctedChunks: [String] = []
+
+        for (index, chunk) in chunks.enumerated() {
+            do {
+                let query = ChatQuery(
+                    messages: [
+                        .init(role: .system, content: systemPrompt)!,
+                        .init(role: .user, content: """
 Please correct the following SRT subtitles:
 
-\(srtContent)
+\(chunk)
 """)!
-                ],
-                model: Model(settings.modelName)
-            )
+                    ],
+                    model: Model(settings.modelName)
+                )
 
-            let result = try await client.chats(query: query)
+                let result = try await client.chats(query: query)
 
-            guard let content = result.choices.first?.message.content else {
-                throw LLMError.invalidResponse
+                guard let content = result.choices.first?.message.content else {
+                    throw LLMError.invalidResponse
+                }
+
+                correctedChunks.append(content)
+            } catch let error as LLMError {
+                throw error
+            } catch {
+                throw LLMError.apiError(error.localizedDescription)
             }
 
-            return content
-        } catch {
-            throw LLMError.apiError(error.localizedDescription)
+            progressHandler?(Double(index + 1) / Double(chunks.count))
         }
+
+        return correctedChunks.joined(separator: "\n\n")
+    }
+
+    // MARK: - SRT Chunking
+
+    /// Estimate token count using a conservative heuristic (characters / 3) that handles CJK and Latin text.
+    private func estimateTokenCount(_ text: String) -> Int {
+        max(1, text.count / 3)
+    }
+
+    /// Split SRT content into chunks that each fit within the token limit.
+    /// Each chunk contains complete subtitle entries (never splits mid-entry).
+    private func splitSRTIntoChunks(_ srtContent: String, maxTokens: Int = 20_000) -> [String] {
+        let entries = srtContent.components(separatedBy: "\n\n").filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+        guard !entries.isEmpty else { return [srtContent] }
+
+        var chunks: [String] = []
+        var currentChunkEntries: [String] = []
+        var currentTokenCount = 0
+
+        for entry in entries {
+            let entryTokens = estimateTokenCount(entry)
+
+            if !currentChunkEntries.isEmpty && currentTokenCount + entryTokens > maxTokens {
+                chunks.append(currentChunkEntries.joined(separator: "\n\n"))
+                currentChunkEntries = []
+                currentTokenCount = 0
+            }
+
+            currentChunkEntries.append(entry)
+            currentTokenCount += entryTokens
+        }
+
+        if !currentChunkEntries.isEmpty {
+            chunks.append(currentChunkEntries.joined(separator: "\n\n"))
+        }
+
+        return chunks.isEmpty ? [srtContent] : chunks
     }
 
     var isConfigured: Bool {

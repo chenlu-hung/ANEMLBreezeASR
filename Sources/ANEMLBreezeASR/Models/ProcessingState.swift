@@ -4,7 +4,7 @@ enum ProcessingState: Equatable {
     case idle
     case extractingAudio(progress: Double)
     case transcribing(progress: Double)
-    case correctingWithLLM
+    case correctingWithLLM(progress: Double)
     case completed
     case error(String)
 
@@ -19,7 +19,7 @@ enum ProcessingState: Equatable {
 
     var progressValue: Double? {
         switch self {
-        case .extractingAudio(let progress), .transcribing(let progress):
+        case .extractingAudio(let progress), .transcribing(let progress), .correctingWithLLM(let progress):
             return progress
         default:
             return nil
