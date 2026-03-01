@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ANEMLBreezeASR is a macOS (13.0+) SwiftUI application for automatic subtitle generation. It extracts audio from video files using FFmpeg, transcribes speech via WhisperKit (Whisper Large v3 with CoreML), optionally corrects/translates subtitles through an OpenAI-compatible LLM API, and can burn subtitles back into video. Documentation is written in Traditional Chinese (繁體中文).
+ANEMLBreezeASR is a macOS (13.0+) SwiftUI application for automatic subtitle generation. It extracts audio from video files using FFmpeg, transcribes speech via WhisperKit with the Breeze-ASR-25 CoreML model (optimized for Taiwanese Mandarin), optionally corrects/translates subtitles through an OpenAI-compatible LLM API, and can burn subtitles back into video. Documentation is written in Traditional Chinese (繁體中文).
 
 ## Build & Run Commands
 
@@ -37,7 +37,7 @@ Views (SwiftUI) → ViewModels (@ObservableObject) → Services → External (FF
 - **Models/** — Data structures: `VideoFile`, `ProcessingState` (state machine enum), `LanguageSettings`, `LLMSettings`
 - **Services/** — Business logic, each wrapping an external dependency:
   - `FFmpegService` — Spawns FFmpeg via `Process()` for audio extraction (16kHz WAV) and subtitle burning
-  - `WhisperKitService` — WhisperKit ASR wrapper; downloads ~1-2GB model on first use to `~/.cache/whisperkit/`
+  - `WhisperKitService` — WhisperKit ASR wrapper using Breeze-ASR-25 model; downloads ~3GB model via Hub API on first use to `~/Library/Application Support/ANEMLBreezeASR/HubCache/`. Reuses VibeTyping's cached model if available.
   - `LLMService` — OpenAI-compatible API client (supports Ollama, LM Studio, etc.)
   - `SubtitleService` — SRT file generation and parsing via SwiftSubtitles
   - `SettingsService` — UserDefaults persistence with JSON encoding
@@ -55,6 +55,7 @@ State transitions are tracked via `ProcessingState`: idle → extractingAudio �
 | Package | Purpose |
 |---------|---------|
 | [WhisperKit](https://github.com/argmaxinc/WhisperKit) ≥0.9.0 | On-device speech recognition |
+| Hub (via [swift-transformers](https://github.com/huggingface/swift-transformers)) | HuggingFace model download API |
 | [SwiftSubtitles](https://github.com/dagronf/SwiftSubtitles) ≥2.2.0 | SRT file I/O |
 | [OpenAI](https://github.com/MacPaw/OpenAI.git) ≥0.3.0 | LLM API client |
 

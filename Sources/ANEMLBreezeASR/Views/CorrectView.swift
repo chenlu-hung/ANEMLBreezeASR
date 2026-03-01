@@ -1,21 +1,22 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
-struct GenerateView: View {
-    @StateObject private var viewModel = MainViewModel()
+struct CorrectView: View {
+    @StateObject private var viewModel = CorrectViewModel()
 
     var body: some View {
         VStack(spacing: 24) {
             // Title
-            Text("Generate Subtitles")
+            Text("校正/翻譯字幕")
                 .font(.title)
                 .fontWeight(.bold)
 
-            // Video Selection
+            // SRT File Selection
             GroupBox {
                 VStack(spacing: 12) {
                     if viewModel.hasFiles {
-                        ForEach(Array(viewModel.videoFiles.enumerated()), id: \.element.id) { index, file in
+                        ForEach(Array(viewModel.srtFiles.enumerated()), id: \.element.id) { index, file in
                             HStack(spacing: 8) {
                                 fileStatusIcon(for: file, at: index)
                                 Text(file.fileName)
@@ -27,23 +28,23 @@ struct GenerateView: View {
                         HStack {
                             Spacer()
                             Button("重新選擇") {
-                                selectVideoFiles()
+                                selectSRTFiles()
                             }
                             .disabled(viewModel.state.isProcessing)
                         }
                     } else {
-                        Button("Select Video File") {
-                            selectVideoFiles()
+                        Button("選擇 SRT 檔案") {
+                            selectSRTFiles()
                         }
                         .buttonStyle(.borderedProminent)
                     }
                 }
             } label: {
                 Label(
-                    viewModel.videoFiles.count > 1
-                        ? "Video Files (\(viewModel.videoFiles.count) 個檔案)"
-                        : "Video File",
-                    systemImage: "video.circle"
+                    viewModel.srtFiles.count > 1
+                        ? "SRT Files (\(viewModel.srtFiles.count) 個檔案)"
+                        : "SRT File",
+                    systemImage: "doc.circle"
                 )
             }
 
@@ -52,7 +53,7 @@ struct GenerateView: View {
                 VStack(spacing: 16) {
                     // Source Language
                     HStack {
-                        Text("影片語言:")
+                        Text("字幕語言:")
                             .frame(width: 100, alignment: .leading)
                         Picker("", selection: $viewModel.languageSettings.sourceLanguage) {
                             ForEach(SupportedLanguage.allCases, id: \.self) { lang in
@@ -62,8 +63,6 @@ struct GenerateView: View {
                         .pickerStyle(.menu)
                         .disabled(viewModel.state.isProcessing)
                     }
-
-                    Divider()
 
                     // Translation Toggle
                     Toggle("啟用翻譯", isOn: Binding(
@@ -104,7 +103,7 @@ struct GenerateView: View {
                 GroupBox {
                     VStack(spacing: 12) {
                         // Batch progress description
-                        if viewModel.videoFiles.count > 1 && viewModel.state.isProcessing {
+                        if viewModel.srtFiles.count > 1 && viewModel.state.isProcessing {
                             HStack {
                                 Text(viewModel.batchProgressDescription)
                                     .font(.headline)
@@ -158,7 +157,7 @@ struct GenerateView: View {
                 }
             }
 
-            // Error Display (only for global errors)
+            // Error Display (only for global errors like LLM not configured)
             if case .error(let message) = viewModel.state, !viewModel.hasFiles || viewModel.successCount == 0 {
                 GroupBox {
                     HStack {
@@ -181,25 +180,8 @@ struct GenerateView: View {
                 GroupBox {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 8) {
-                            ForEach(viewModel.videoFiles.filter({ $0.isCompleted })) { file in
-                                // SRT file
-                                if let srtURL = file.srtURL {
-                                    HStack {
-                                        Image(systemName: "doc.text.fill")
-                                            .foregroundColor(.orange)
-                                        Text("原始字幕：\(srtURL.lastPathComponent)")
-                                            .lineLimit(1)
-                                            .truncationMode(.middle)
-                                        Spacer()
-                                        Button("Show in Finder") {
-                                            NSWorkspace.shared.activateFileViewerSelecting([srtURL])
-                                        }
-                                        .buttonStyle(.bordered)
-                                        .controlSize(.small)
-                                    }
-                                }
-                                // Corrected file (only show if different from srt)
-                                if let correctedURL = file.correctedURL, correctedURL != file.srtURL {
+                            ForEach(viewModel.srtFiles.filter({ $0.isCompleted })) { file in
+                                if let correctedURL = file.correctedURL {
                                     HStack {
                                         Image(systemName: "doc.text.fill")
                                             .foregroundColor(.green)
@@ -214,7 +196,6 @@ struct GenerateView: View {
                                         .controlSize(.small)
                                     }
                                 }
-                                // Translated file
                                 if let translatedURL = file.translatedURL {
                                     HStack {
                                         Image(systemName: "doc.text.fill")
@@ -230,14 +211,10 @@ struct GenerateView: View {
                                         .controlSize(.small)
                                     }
                                 }
-
-                                if viewModel.videoFiles.filter({ $0.isCompleted }).count > 1 {
-                                    Divider()
-                                }
                             }
 
                             // Show failed files
-                            ForEach(viewModel.videoFiles.filter({ $0.isFailed })) { file in
+                            ForEach(viewModel.srtFiles.filter({ $0.isFailed })) { file in
                                 HStack {
                                     Image(systemName: "xmark.circle.fill")
                                         .foregroundColor(.red)
@@ -250,9 +227,9 @@ struct GenerateView: View {
                             }
 
                             // Summary for multi-file
-                            if viewModel.videoFiles.count > 1 {
+                            if viewModel.srtFiles.count > 1 {
                                 Divider()
-                                Text("\(viewModel.successCount)/\(viewModel.videoFiles.count) 檔案處理成功")
+                                Text("\(viewModel.successCount)/\(viewModel.srtFiles.count) 檔案處理成功")
                                     .font(.callout)
                                     .foregroundColor(.secondary)
                             }
@@ -266,24 +243,24 @@ struct GenerateView: View {
 
             // Action Buttons
             HStack(spacing: 12) {
-                Button("Start Processing") {
+                Button("開始校正") {
                     Task {
-                        await viewModel.startProcessing()
+                        await viewModel.startCorrection()
                     }
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(!viewModel.hasFiles || viewModel.state.isProcessing)
 
                 if case .completed = viewModel.state {
-                    Button("選擇新影片") {
-                        selectVideoFiles()
+                    Button("選擇新檔案") {
+                        selectSRTFiles()
                     }
                     .buttonStyle(.bordered)
                 }
 
                 if case .error = viewModel.state {
-                    Button("選擇其他影片") {
-                        selectVideoFiles()
+                    Button("選擇其他檔案") {
+                        selectSRTFiles()
                     }
                     .buttonStyle(.bordered)
                 }
@@ -292,7 +269,7 @@ struct GenerateView: View {
         .padding(32)
     }
 
-    private func fileStatusIcon(for file: VideoFileResult, at index: Int) -> some View {
+    private func fileStatusIcon(for file: SRTFileResult, at index: Int) -> some View {
         Group {
             if file.isFailed {
                 Image(systemName: "xmark.circle.fill")
@@ -310,24 +287,15 @@ struct GenerateView: View {
         }
     }
 
-    private func selectVideoFiles() {
+    private func selectSRTFiles() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.movie, .mpeg4Movie, .quickTimeMovie, .avi]
+        panel.allowedContentTypes = [.srt]
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
-        panel.message = "選擇一個或多個影片檔進行字幕生成"
+        panel.message = "選擇一個或多個 SRT 字幕檔進行校正/翻譯"
 
         if panel.runModal() == .OK, !panel.urls.isEmpty {
-            viewModel.selectVideos(urls: panel.urls)
+            viewModel.selectSRTs(urls: panel.urls)
         }
-    }
-}
-
-// UTType extension for SRT files
-import UniformTypeIdentifiers
-
-extension UTType {
-    static var srt: UTType {
-        UTType(exportedAs: "public.srt")
     }
 }

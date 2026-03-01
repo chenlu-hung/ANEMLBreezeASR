@@ -7,21 +7,27 @@ struct ContentView: View {
         TabView(selection: $selectedTab) {
             GenerateView()
                 .tabItem {
-                    Label("Generate Subtitles", systemImage: "text.bubble")
+                    Label("生成字幕", systemImage: "text.bubble")
                 }
                 .tag(0)
 
             BurnView()
                 .tabItem {
-                    Label("Burn Subtitles", systemImage: "flame")
+                    Label("燒錄字幕", systemImage: "flame")
                 }
                 .tag(1)
 
-            SettingsView()
+            CorrectView()
                 .tabItem {
-                    Label("Settings", systemImage: "gear")
+                    Label("校正/翻譯字幕", systemImage: "text.badge.checkmark")
                 }
                 .tag(2)
+
+            SettingsView()
+                .tabItem {
+                    Label("設定", systemImage: "gear")
+                }
+                .tag(3)
         }
         .frame(minWidth: 600, minHeight: 500)
     }

@@ -22,7 +22,7 @@ struct SettingsView: View {
                                     .font(.headline)
                                 SecureField("Enter your API key", text: $settings.apiKey)
                                     .textFieldStyle(.roundedBorder)
-                                Text("Your API key for OpenAI or compatible services")
+                                Text("支援 OpenAI 相容 API（如 Gemini、OpenAI、Ollama 等）")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -32,7 +32,7 @@ struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("API Endpoint")
                                     .font(.headline)
-                                TextField("https://api.openai.com/v1", text: $settings.apiEndpoint)
+                                TextField("https://generativelanguage.googleapis.com/v1beta/openai", text: $settings.apiEndpoint)
                                     .textFieldStyle(.roundedBorder)
                                 Text("Full URL including protocol and path (e.g., http://localhost:1234/v1)")
                                     .font(.caption)
@@ -44,9 +44,9 @@ struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Model Name")
                                     .font(.headline)
-                                TextField("gpt-4o-mini", text: $settings.modelName)
+                                TextField("gemini-2.5-flash", text: $settings.modelName)
                                     .textFieldStyle(.roundedBorder)
-                                Text("The model identifier (e.g., gpt-4o, gpt-4o-mini, or local model name)")
+                                Text("模型名稱（如 gemini-2.5-flash、gpt-4o-mini、或本地模型名稱）")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }

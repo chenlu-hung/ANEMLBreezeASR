@@ -8,8 +8,8 @@ struct LLMSettings: Codable, Equatable {
 
     static let `default` = LLMSettings(
         apiKey: "",
-        apiEndpoint: "https://api.openai.com/v1",
-        modelName: "gpt-4o-mini",
+        apiEndpoint: "https://generativelanguage.googleapis.com/v1beta/openai",
+        modelName: "gemini-2.5-flash",
         systemPrompt: """
 You are a subtitle correction assistant. Your task is to:
 1. Fix grammar and spelling errors in the subtitles
@@ -24,8 +24,8 @@ Do not add explanations or change the timing. Just improve the text quality.
 
     // Parse endpoint URL components
     var host: String {
-        guard let url = URL(string: apiEndpoint) else { return "api.openai.com" }
-        return url.host ?? "api.openai.com"
+        guard let url = URL(string: apiEndpoint) else { return "generativelanguage.googleapis.com" }
+        return url.host ?? "generativelanguage.googleapis.com"
     }
 
     var scheme: String {

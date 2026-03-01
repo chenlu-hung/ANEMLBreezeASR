@@ -28,6 +28,12 @@ struct VideoFile: Identifiable {
             .appendingPathExtension("srt")
     }
 
+    func srtPath(forLanguage lang: SupportedLanguage) -> URL {
+        let filename = url.deletingPathExtension().lastPathComponent
+        return url.deletingLastPathComponent()
+            .appendingPathComponent("\(filename).\(lang.rawValue).srt")
+    }
+
     func outputVideoPath(withName name: String) -> URL {
         url.deletingLastPathComponent()
             .appendingPathComponent(name)
