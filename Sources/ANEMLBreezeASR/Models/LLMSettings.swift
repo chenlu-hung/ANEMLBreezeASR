@@ -5,6 +5,9 @@ struct LLMSettings: Codable, Equatable {
     var apiEndpoint: String
     var modelName: String
     var systemPrompt: String
+    /// Minimum seconds between consecutive LLM requests. 0 disables throttling.
+    /// Useful for rate-limited providers (e.g. OpenRouter free models ≈ 20 req/min).
+    var requestIntervalSeconds: Double = 0
 
     static let `default` = LLMSettings(
         apiKey: "",
@@ -42,5 +45,23 @@ Do not add explanations or change the timing. Just improve the text quality.
         guard let url = URL(string: apiEndpoint) else { return "/v1" }
         let path = url.path
         return path.isEmpty ? "/v1" : path
+    }
+}
+
+extension LLMSettings {
+    enum CodingKeys: String, CodingKey {
+        case apiKey, apiEndpoint, modelName, systemPrompt, requestIntervalSeconds
+    }
+
+    // Custom decoder so settings persisted before `requestIntervalSeconds` existed
+    // still load (the synthesized decoder would throw on the missing key, wiping
+    // the user's saved API key/endpoint).
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.apiKey = try c.decode(String.self, forKey: .apiKey)
+        self.apiEndpoint = try c.decode(String.self, forKey: .apiEndpoint)
+        self.modelName = try c.decode(String.self, forKey: .modelName)
+        self.systemPrompt = try c.decode(String.self, forKey: .systemPrompt)
+        self.requestIntervalSeconds = try c.decodeIfPresent(Double.self, forKey: .requestIntervalSeconds) ?? 0
     }
 }

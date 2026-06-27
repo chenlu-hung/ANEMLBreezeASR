@@ -156,13 +156,18 @@ class MainViewModel: ObservableObject {
                     addStatus("開始 LLM 校正...")
 
                     let srtContent = try String(contentsOf: initialSrtURL, encoding: .utf8)
-                    let correctedContent = try await llmService.correctSubtitles(
+                    let correctedResult = try await llmService.correctSubtitles(
                         srtContent: srtContent,
                         progressHandler: { [weak self] progress in
                             self?.state = .correctingWithLLM(progress: progress)
                         }
                     )
                     addStatus("LLM 校正完成")
+                    if correctedResult.mismatches > 0 {
+                        addStatus("⚠ \(correctedResult.mismatches)/\(correctedResult.originalCount) 段 LLM 對不上原始切分，已保留原文（時間軸已對齊原始版本）")
+                    } else {
+                        addStatus("時間軸已對齊原始版本（\(correctedResult.originalCount) 段全部對上）")
+                    }
 
                     let correctedURL: URL
                     if languageSettings.sourceLanguage == .auto {
@@ -171,10 +176,10 @@ class MainViewModel: ObservableObject {
                         correctedURL = video.srtPath(forLanguage: languageSettings.sourceLanguage)
                     }
 
-                    try correctedContent.write(to: correctedURL, atomically: true, encoding: .utf8)
+                    try correctedResult.content.write(to: correctedURL, atomically: true, encoding: .utf8)
                     videoFiles[index].correctedURL = correctedURL
 
-                    if subtitleService.validateSRT(content: correctedContent) {
+                    if subtitleService.validateSRT(content: correctedResult.content) {
                         addStatus("校正後 SRT 驗證通過，已儲存至 \(correctedURL.lastPathComponent)")
                     } else {
                         addStatus("⚠ 校正後 SRT 格式可能有誤，已儲存至 \(correctedURL.lastPathComponent)，請確認結果")
@@ -185,20 +190,25 @@ class MainViewModel: ObservableObject {
                         state = .translatingWithLLM(progress: 0)
                         addStatus("開始 LLM 翻譯（目標語言：\(targetLang.displayName)）...")
 
-                        let translatedContent = try await llmService.translateSubtitles(
-                            srtContent: correctedContent,
+                        let translatedResult = try await llmService.translateSubtitles(
+                            srtContent: correctedResult.content,
                             targetLanguage: targetLang,
                             progressHandler: { [weak self] progress in
                                 self?.state = .translatingWithLLM(progress: progress)
                             }
                         )
                         addStatus("LLM 翻譯完成")
+                        if translatedResult.mismatches > 0 {
+                            addStatus("⚠ \(translatedResult.mismatches)/\(translatedResult.originalCount) 段多次重試仍對不上，已留空（時間軸已對齊原始版本，避免混入原文）")
+                        } else {
+                            addStatus("時間軸已對齊原始版本（\(translatedResult.originalCount) 段全部對上）")
+                        }
 
                         let translatedURL = video.srtPath(forLanguage: targetLang)
-                        try translatedContent.write(to: translatedURL, atomically: true, encoding: .utf8)
+                        try translatedResult.content.write(to: translatedURL, atomically: true, encoding: .utf8)
                         videoFiles[index].translatedURL = translatedURL
 
-                        if subtitleService.validateSRT(content: translatedContent) {
+                        if subtitleService.validateSRT(content: translatedResult.content) {
                             addStatus("翻譯後 SRT 驗證通過，已儲存至 \(translatedURL.lastPathComponent)")
                         } else {
                             addStatus("⚠ 翻譯後 SRT 格式可能有誤，已儲存至 \(translatedURL.lastPathComponent)，請確認結果")

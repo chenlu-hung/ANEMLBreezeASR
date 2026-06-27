@@ -1,0 +1,44 @@
+{
+  "generated": "2026-06-10T15:42:44+00:00",
+  "mode": "update",
+  "depth": 3,
+  "source": "git",
+  "files": 20,
+  "modules": {
+    "(root)": {
+      "hash": "d4fe621bd8f0aaf7e10d5b22380a483dec816a412c8e511e800b8024367024d0",
+      "files": 1,
+      "doc": "modules/_root.md"
+    },
+    "Sources/ANEMLBreezeASR": {
+      "hash": "aed0fa332e56ab586daa2a77cc79c6f11d7da009da6809a6193f6bfeb145a49c",
+      "files": 1,
+      "doc": "modules/Sources__ANEMLBreezeASR.md"
+    },
+    "Sources/ANEMLBreezeASR/Models": {
+      "hash": "b7aa0467c228be0f64ede0a1e2140c0632c04c0fe92aa2ecdb3a8a01a57f15c4",
+      "files": 4,
+      "doc": "modules/Sources__ANEMLBreezeASR__Models.md"
+    },
+    "Sources/ANEMLBreezeASR/Services": {
+      "hash": "77bd4ed536935120aacd1766861798d0e50b20e268c3ac8c495fc589c5f907ab",
+      "files": 5,
+      "doc": "modules/Sources__ANEMLBreezeASR__Services.md"
+    },
+    "Sources/ANEMLBreezeASR/ViewModels": {
+      "hash": "01f123667cb8d062a9cff5d9dba24f8ac0eeeb546acabc4941c85f6e9a416ee9",
+      "files": 3,
+      "doc": "modules/Sources__ANEMLBreezeASR__ViewModels.md"
+    },
+    "Sources/ANEMLBreezeASR/Views": {
+      "hash": "956a7f9114717b45b17a73fcc4505ede27b31200e6b1737d7a5f7a80826e6f27",
+      "files": 5,
+      "doc": "modules/Sources__ANEMLBreezeASR__Views.md"
+    },
+    "Tests/ANEMLBreezeASRTests": {
+      "hash": "d93c3307b5c9931063896349a3586bbc91fb1f156ec560f5f38810eaf9a78f85",
+      "files": 1,
+      "doc": "modules/Tests__ANEMLBreezeASRTests.md"
+    }
+  }
+}

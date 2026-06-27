@@ -42,7 +42,7 @@ Views (SwiftUI) → ViewModels (@ObservableObject) → Services → External (FF
   - `SubtitleService` — SRT file generation and parsing via SwiftSubtitles
   - `SettingsService` — UserDefaults persistence with JSON encoding
 - **ViewModels/** — `MainViewModel` orchestrates the subtitle generation pipeline; `BurnViewModel` handles subtitle burning
-- **Views/** — `ContentView` hosts a 3-tab TabView: Generate, Burn, Settings
+- **Views/** — `ContentView` hosts a 4-tab TabView: Generate (生成字幕), Burn (燒錄字幕), Correct/Translate (校正/翻譯字幕), Settings (設定)
 
 ## Key Processing Pipeline
 
@@ -68,3 +68,10 @@ Uses Swift async/await throughout. FFmpeg process execution bridges to async via
 ## Error Types
 
 Each service defines its own error enum: `FFmpegError`, `WhisperKitError`, `LLMError`, `SubtitleError`. Errors surface to users via NSAlert dialogs.
+
+## Project map
+A `.projectmap/` index exists — use it before broad exploration:
+- Read `.projectmap/ARCHITECTURE.md` for the module map, entry points, and conventions.
+- To locate a symbol, grep `.projectmap/tags` (ctags format) instead of scanning the repo.
+- Open `.projectmap/modules/<name>.md` only for the module you're working in.
+Re-run `/project-map update` after substantial changes. **This map is built at grouping depth 3** (per-layer modules: Models / Services / ViewModels / Views) — always run the script with `PROJECTMAP_DEPTH=3`, since the script defaults to 2 and would otherwise regroup the modules and orphan the per-layer docs.

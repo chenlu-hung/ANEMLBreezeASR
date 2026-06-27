@@ -50,6 +50,18 @@ struct SettingsView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
+
+                            Divider()
+
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("請求間隔（秒）")
+                                    .font(.headline)
+                                TextField("0", value: $settings.requestIntervalSeconds, format: .number)
+                                    .textFieldStyle(.roundedBorder)
+                                Text("每次 LLM 請求之間的最小間隔。有速率限制的服務（如 OpenRouter 免費模型約 20 次/分）建議設 3 秒以上；Gemini 等可留 0。")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                         .padding(.vertical, 8)
                     } label: {
